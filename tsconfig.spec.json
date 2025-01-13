@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "out-tsc/spec",
+    "types": ["jest","node"],
+    "module": "CommonJS",
+    "emitDecoratorMetadata": true,
+    "lib": ["dom"],
+    "target": "es6",
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "files": ["projects/foreground/src/setup-jest.ts"],
+  "include": ["**/*.spec.ts", "**/*.d.ts"],
+  "exclude": ["cypress/global.d.ts", "**/*.cy.ts", "cypress.config.ts"]
+}

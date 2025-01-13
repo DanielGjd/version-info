@@ -1,0 +1,408 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "foreground": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      },
+      "root": "projects/foreground",
+      "sourceRoot": "projects/foreground/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/foreground",
+            "index": "projects/foreground/src/index.html",
+            "main": "projects/foreground/src/main.ts",
+            "polyfills": "projects/foreground/src/polyfills.ts",
+            "tsConfig": "tsconfig.app.json",
+            "assets": [
+              "projects/foreground/src/assets",
+              "projects/foreground/src/favicon.ico",
+              {
+                "input": "projects/i18n/json",
+                "glob": "**/*.json",
+                "output": "/shared-assets/i18n/"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/@shift/ui.volkswagen/assets/f31x/",
+                "output": "/assets/themes/volkswagen/f31x/"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/@shift/ui.volkswagen/assets/f30x/",
+                "output": "/assets/themes/volkswagen/f30x/"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/@shift/ui.volkswagen/assets/f40x/",
+                "output": "/assets/themes/volkswagen/f40x/"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/@shift/ui.volkswagen/assets/fonts/",
+                "output": "/assets/themes/volkswagen/fonts/"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/@shift/ui.volkswagen/assets/f322",
+                "output": "/assets/themes/volkswagen/f322"
+              }
+            ],
+            "styles": ["projects/foreground/src/styles.scss"],
+            "scripts": [],
+            "stylePreprocessorOptions": {
+              "includePaths": ["node_modules","node_modules/@shift/ui/lib/theming", "node_modules/@shift/ui.volkswagen/lib/theming"]
+            },
+            "fileReplacements": [
+              {
+                "replace": "projects/foreground/src/languages.json",
+                "with": "projects/i18n/languages.json"
+              }
+            ],
+            "vendorChunk": true,
+            "extractLicenses": false,
+            "buildOptimizer": false,
+            "sourceMap": true,
+            "optimization": false,
+            "namedChunks": true
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "projects/foreground/src/environments/environment.ts",
+                  "with": "projects/foreground/src/environments/environment.prod.ts"
+                },
+                {
+                  "replace": "projects/foreground/src/languages.json",
+                  "with": "projects/i18n/languages.json"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": false,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "assets": [
+                "projects/foreground/src/assets",
+                "projects/foreground/src/favicon.ico",
+                {
+                  "input": "projects/i18n/json",
+                  "glob": "**/*.json",
+                  "output": "/shared-assets/i18n/"
+                },
+                {
+                  "glob": "**/*",
+                  "input": "node_modules/@shift/ui/assets/shift/ui/volkswagen/f31x/",
+                  "output": "/assets/shift/ui/volkswagen/f31x/"
+                },
+                {
+                  "glob": "**/*",
+                  "input": "node_modules/@shift/ui/assets/shift/ui/volkswagen/f30x/",
+                  "output": "/assets/shift/ui/volkswagen/f30x/"
+                },
+                {
+                  "glob": "**/*",
+                  "input": "node_modules/@shift/ui/assets/shift/ui/volkswagen/f40x/",
+                  "output": "/assets/shift/ui/volkswagen/f40x/"
+                },
+                {
+                  "glob": "**/*",
+                  "input": "node_modules/@shift/ui/assets/shift/ui/volkswagen/f322",
+                  "output": "/assets/shift/ui/volkswagen/f322"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "5mb",
+                  "maximumError": "10mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb",
+                  "maximumError": "10kb"
+                }
+              ]
+            },
+            "old": {
+              "fileReplacements": [
+                {
+                  "replace": "projects/foreground/src/environments/environment.ts",
+                  "with": "projects/foreground/src/environments/environment.old.ts"
+                },
+                {
+                  "replace": "projects/foreground/src/languages.json",
+                  "with": "projects/i18n/languages.json"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": false,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "assets": [
+                "projects/foreground/src/assets",
+                "projects/foreground/src/favicon.ico",
+                {
+                  "input": "projects/i18n/json",
+                  "glob": "**/*.json",
+                  "output": "/shared-assets/i18n/"
+                },
+                {
+                  "glob": "**/*",
+                  "input": "node_modules/@shift/ui/assets/shift/ui/volkswagen/f31x/",
+                  "output": "/assets/shift/ui/volkswagen/f31x/"
+                },
+                {
+                  "glob": "**/*",
+                  "input": "node_modules/@shift/ui/assets/shift/ui/volkswagen/f30x/",
+                  "output": "/assets/shift/ui/volkswagen/f30x/"
+                },
+                {
+                  "glob": "**/*",
+                  "input": "node_modules/@shift/ui/assets/shift/ui/volkswagen/f40x/",
+                  "output": "/assets/shift/ui/volkswagen/f40x/"
+                },
+                {
+                  "glob": "**/*",
+                  "input": "node_modules/@shift/ui/assets/shift/ui/volkswagen/f322",
+                  "output": "/assets/shift/ui/volkswagen/f322"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "5mb",
+                  "maximumError": "10mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb",
+                  "maximumError": "10kb"
+                }
+              ]
+            }
+          },
+          "defaultConfiguration": ""
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "foreground:build"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "foreground:build:production"
+            },
+            "old": {
+              "browserTarget": "foreground:build:old"
+            }
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "foreground:build"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": ["projects/foreground/**/*.ts", "projects/foreground/**/*.html"]
+          }
+        }
+      }
+    },
+    "webapp": {
+      "projectType": "application",
+      "root": "projects/webapp",
+      "architect": {
+        "build": {
+          "builder": "@shift/builder.webapps:build",
+          "options": {
+            "outputPath": "deployment",
+            "manifest": "projects/webapp/manifest.json",
+            "ignoreManifestErrors": true,
+            "assets": [
+              {
+                "input": "projects/webapp/shared-assets",
+                "glob": "**/*",
+                "output": "/shared-assets/"
+              },
+              {
+                "input": "projects/webapp",
+                "glob": "ICAS3*.dev.mose",
+                "output": "/sSOA-Manifest/"
+              },
+              {
+                "input": "projects/webapp",
+                "glob": "ICAS3*.prod.mose",
+                "output": "/sSOA-Manifest-2/"
+              }
+            ],
+            "platform": "mod4",
+            "outputUnpackedPath": "deployment/unpacked",
+            "outputJarPath": "deployment/iav.icas3.vw.versioninfo.jar",
+            "appDirectory": "apps",
+            "translationsPath": "projects/i18n/json/HMI1.0_10"
+          },
+          "configurations": {
+            "production": {
+              "outputUnpackedPath": "deployment/unpacked",
+              "outputPath": "deployment",
+              "endpointTargetConfiguration": "production",
+              "outputJarPath": "deployment/iav.icas3.vw.versioninfo.jar",
+              "excludeFonts": true
+            },
+            "old": {
+              "outputUnpackedPath": "deployment/unpacked",
+              "outputPath": "deployment",
+              "endpointTargetConfiguration": "old",
+              "outputJarPath": "deployment/iav.icas3.vw.versioninfo.jar",
+              "excludeFonts": true
+            }
+          }
+        },
+        "serve": {
+          "builder": "@shift/builder.webapps:serve",
+          "options": {
+            "buildTarget": "webapp:build",
+            "serveDirectory": "dist/webapp-serve",
+            "port": 4200
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "webapp:build:production",
+              "endpointTargetConfiguration": "production"
+            }
+          }
+        },
+        "license": {
+          "builder": "@shift/builder.webapps:license",
+          "options": {
+            "buildTarget": "webapp:build",
+            "licenseFolder": "projects/webapp/shared-assets/licenses",
+            "excelPath": "license-reports",
+            "saveLicenses": true,
+            "useTemplate": "custom",
+            "overwriteExistingTemplate": true,
+            "baseTemplate": "null"
+          }
+        }
+      }
+    },
+    "i18n": {
+      "projectType": "application",
+      "root": "projects/i18n",
+      "prefix": "",
+      "architect": {
+        "translate": {
+          "builder": "@shift/builder.translate:translate2",
+          "options": {
+            "txtIDFile": "projects/i18n/text-ids.json",
+            "keepTranslationsOnImport": false,
+            "fillMissing": true,
+            "replaceOnImport": {
+              "\\n": " "
+            },
+            "jsonFolder": "projects/i18n/json",
+            "languages": "projects/i18n/languages.json",
+            "hmiLinguistProjectFilename": "text-ids.xml",
+            "hmiLinguistProjectFolder": "projects/i18n/hmilinguist"
+          }
+        },
+        "translate-import": {
+          "builder": "@shift/builder.translate:translate2",
+          "options": {
+            "translateTarget": "i18n:translate",
+            "action": "import"
+          }
+        },
+        "translate-export": {
+          "builder": "@shift/builder.translate:translate2",
+          "options": {
+            "translateTarget": "i18n:translate",
+            "action": "export"
+          }
+        },
+        "translate-export-src": {
+          "builder": "@shift/builder.translate:translate2",
+          "options": {
+            "translateTarget": "i18n:translate",
+            "action": "export-src"
+          }
+        },
+        "translate-generate-map": {
+          "builder": "@shift/builder.translate:translate2",
+          "options": {
+            "translateTarget": "i18n:translate",
+            "action": "generate-map"
+          }
+        }
+      }
+    },
+    "background": {
+      "architect": {
+        "build": {
+          "builder": "@shift/builder.node:build",
+          "options": {
+            "outputPath": "dist/background",
+            "main": "projects/background/src/main.ts",
+            "tsConfig": "projects/background/tsconfig.json"
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "projects/background/src/environments/environment.ts",
+                  "with": "projects/background/src/environments/environment.prod.ts"
+                }
+              ]
+            },
+            "old": {
+              "fileReplacements": [
+                {
+                  "replace": "projects/background/src/environments/environment.ts",
+                  "with": "projects/background/src/environments/environment.old.ts"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "builder": "@shift/builder.node:serve",
+          "options": {
+            "buildTarget": "background:build"
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "background:build:production"
+            },
+            "old": {
+              "buildTarget": "background:build:old"
+            }
+          }
+        }
+      },
+      "root": "projects/background",
+      "sourceRoot": "projects/background/src"
+    }
+  },
+  "cli": {
+    "schematicCollections": ["@angular-eslint/schematics"],
+    "analytics": false
+  }
+}

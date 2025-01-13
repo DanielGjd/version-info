@@ -1,0 +1,69 @@
+{
+  "header": "# InCar-App: Version Info\n\n",
+  "bumpFiles": [
+    {
+      "filename": "package.json",
+      "type": "json"
+    },
+    {
+      "filename": "package-lock.json",
+      "type": "json"
+    },
+    {
+      "filename": "deployment/unpacked/manifest.json",
+      "type": "json"
+    },
+    {
+      "filename": "projects/webapp/manifest.json",
+      "type": "json"
+    }
+  ],
+  "types": [
+    {
+      "type": "feat",
+      "section": "Features"
+    },
+    {
+      "type": "fix",
+      "section": "Bug Fixes"
+    },
+    {
+      "type": "chore",
+      "section": "Chores",
+      "hidden": false
+    },
+    {
+      "type": "docs",
+      "section": "Documentation",
+      "hidden": false
+    },
+    {
+      "type": "style",
+      "section": "Style",
+      "hidden": false
+    },
+    {
+      "type": "refactor",
+      "section": "Refactors",
+      "hidden": false
+    },
+    {
+      "type": "perf",
+      "section": "Performance",
+      "hidden": false
+    },
+    {
+      "type": "test",
+      "section": "Test",
+      "hidden": false
+    }
+  ],
+  "issuePrefixes": [
+    "ARTCIA",
+    "NN"
+  ],
+  "userUrlFormat": "https://devstack.vwgroup.com/bitbucket/users/{{user}}",
+  "issueUrlFormat": "https://devstack.vwgroup.com/jira/browse/{{prefix}}-{{id}}",
+  "compareUrlFormat": "https://devstack.vwgroup.com/bitbucket/projects/ICWAVI/repos/carapp_versioninfo/compare/diff?targetBranch={{previousTag}}&sourceBranch={{currentTag}}",
+  "commitUrlFormat": "https://devstack.vwgroup.com/bitbucket/projects/ICWAVI/repos/carapp_versioninfo/commits/{{hash}}"
+}

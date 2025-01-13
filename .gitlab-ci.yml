@@ -1,0 +1,265 @@
+# Script guidelines:
+# 1. Prepand all variables with the keyword "ICA" (ICA = InCarApps) to separate them from others
+
+stages:
+  - Preparation
+  - Test Check Build
+  - Post Preparation
+  - Build
+  - Deployment
+
+# limit gitlab runner to run on machines with the following labels/tags
+default:
+  tags:
+    - k8s
+    - docker
+
+variables:
+  # ci infrastructure variables
+  ICA_KANIKO_VERSION: '1.6.0'
+  ICA_KANIKO_IMAGE_VERSION: 'v$ICA_KANIKO_VERSION-debug'
+  ICA_CONTAINER_REGISTRY_CACHE: '$CI_REGISTRY_IMAGE/cache'
+  ICA_CONTAINER_DESTINATION_SHA: '$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA'
+  ICA_CONTAINER_DESTINATION_REF: '$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG'
+
+  # JFrog environment variables
+  ICA_JFROG_HOST: '$DEVSTACK_JFROG_HOST'
+  ICA_JFROG_API_KEY: '$DEVSTACK_JFROG_API_KEY'
+  ICA_JFROG_EMAIL: '$DEVSTACK_JFROG_EMAIL'
+  ICA_JFROG_USERNAME: '$DEVSTACK_JFROG_USERNAME'
+
+  ICA_DEPLOYMENT_ARTIFACTS_FOLDER: 'deployment_artifacts'
+  ICA_COVERAGE_SOURCE_FOLDER: 'coverage'
+
+  ICA_COMMIT_REF_NAME: '$CI_COMMIT_REF_NAME' # ref-slug (branch name)
+  ICA_BUILD_NUMBER: '$CI_PIPELINE_ID'
+
+  # app environment variables
+  ICA_APP_NAME: 'version-info'
+
+
+# ---------------------------------------------------------------------------------------------------
+# Preparation stage jobs
+# ---------------------------------------------------------------------------------------------------
+Create project docker image:
+  stage: Preparation
+  image:
+    name: 'gcr.io/kaniko-project/executor:$ICA_KANIKO_IMAGE_VERSION'
+    entrypoint: ['']
+  interruptible: true # this job has been interruptible too because if not all subsequent jobs cannot be cancelled automatically
+  rules:
+    - if: $RUN_ALL_JOBS == 'true'
+    - if: $CI_COMMIT_BRANCH == 'main'
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  before_script:
+    - env
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - echo "End before script"
+  script:
+    - /kaniko/executor
+      --context "$PWD"
+      --cache=true
+      --cache-repo "$ICA_CONTAINER_REGISTRY_CACHE"
+      --build-arg "HTTP_PROXY=$HTTP_PROXY"
+      --build-arg "HTTPS_PROXY=$HTTPS_PROXY"
+      --build-arg "FILE_IAV_SSH_PRIVATEKEY=$FILE_IAV_SSH_PRIVATEKEY"
+      --build-arg "FILE_IAV_SSH_PUBLICKEY=$FILE_IAV_SSH_PUBLICKEY"
+      --build-arg "FILE_NPM_JFROG_CONFIGURATION=$FILE_NPM_JFROG_CONFIGURATION"
+      --build-arg "DEVSTACK_JFROG_HOST=$ICA_JFROG_HOST"
+      --build-arg "DEVSTACK_JFROG_API_KEY=$DEVSTACK_JFROG_API_KEY"
+      --build-arg "DEVSTACK_JFROG_EMAIL=$ICA_JFROG_EMAIL"
+      --build-arg "DEVSTACK_JFROG_USERNAME=$ICA_JFROG_USERNAME"
+      --target "ci"
+      --label "KANIKO_VERSION=$ICA_KANIKO_VERSION"
+      --destination "$ICA_CONTAINER_DESTINATION_SHA"
+      --destination "$ICA_CONTAINER_DESTINATION_REF"
+      --registry-certificate $CI_REGISTRY=$CI_REGISTRY_CERT
+      --registry-certificate $IAV_DOCKER_MIRROR=$IAV_DOCKER_MIRROR_CERT
+      --registry-mirror "$IAV_DOCKER_MIRROR" # using this mirror requires DISABLED group runners in the CI/CD - Runners - Settings in gitlab project configuration
+
+.shared_script_npm_preparation: &shared_script_npm_preparation
+  - cp -rf $FILE_NPM_JFROG_CONFIGURATION ~/.npmrc
+  # _password/email/username for lower node versions, //$JFROG_HOST:_password/email/username for higher node versions (16+)
+  - npm config set _password $ICA_JFROG_API_KEY;
+    npm config set email $ICA_JFROG_EMAIL;
+    npm config set username $ICA_JFROG_USERNAME;
+    npm config set //$ICA_JFROG_HOST:_password $ICA_JFROG_API_KEY;
+    npm config set //$ICA_JFROG_HOST:email $ICA_JFROG_EMAIL;
+    npm config set //$ICA_JFROG_HOST:username $ICA_JFROG_USERNAME
+  # get the node_modules
+  - npm ci --prefer-offline
+
+
+# ---------------------------------------------------------------------------------------------------
+# Coding Style Guide Check stage jobs
+# ---------------------------------------------------------------------------------------------------
+Prettier check:
+  stage: Test Check Build
+  image: $ICA_CONTAINER_DESTINATION_REF
+  interruptible: true
+  rules:
+    - if: $RUN_ALL_JOBS == 'true'
+    - if: $CI_COMMIT_BRANCH == 'main'
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  before_script:
+    - *shared_script_npm_preparation
+  script:
+    - npm run ci:prettier:check
+
+# ---------------------------------------------------------------------------------------------------
+# Static Code Analysis Check stage jobs
+# ---------------------------------------------------------------------------------------------------
+Lint check:
+  stage: Test Check Build
+  image: $ICA_CONTAINER_DESTINATION_REF
+  interruptible: true
+  rules:
+    - if: $RUN_ALL_JOBS == 'true'
+    - if: $CI_COMMIT_BRANCH == 'main'
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  before_script:
+    - *shared_script_npm_preparation
+  script:
+    - npm run ci:lint:check
+
+# ---------------------------------------------------------------------------------------------------
+# Test stage jobs
+# ---------------------------------------------------------------------------------------------------
+Run Unit-Tests:
+  stage: Test Check Build
+  image: $ICA_CONTAINER_DESTINATION_REF
+  interruptible: true
+  rules:
+    - if: $RUN_ALL_JOBS == 'true'
+    - if: $CI_COMMIT_BRANCH == 'main'
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  variables:
+    ICA_TEST_REPORT_PATH: 'tests'
+  artifacts:
+    when: always
+    paths:
+      - 'junit.xml'
+      - ${ICA_TEST_REPORT_PATH}/
+    reports:
+        junit: 'junit.xml'
+    name: 'unit-tests--version-info'
+  before_script:
+    - *shared_script_npm_preparation
+  script:
+    - npx envinfo --preset jest
+    - npm run ci:test
+  coverage: '/Branches \s+ : \d+.\d+%/'
+
+Run e2e-Tests:
+  stage: Test Check Build
+  image: $ICA_CONTAINER_DESTINATION_REF
+  interruptible: true
+  rules:
+    - if: $RUN_ALL_JOBS == 'true'
+    - if: $CI_COMMIT_BRANCH == 'main'
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  before_script:
+    - *shared_script_npm_preparation
+  script:
+    - DEBUG=cypress:cli npx cypress verify
+    - npm run ci:e2e
+  artifacts:
+    when: always
+    paths:
+      - ${ICA_TEST_REPORT_PATH}/
+
+Update version number:
+  stage: Post Preparation
+  image: $ICA_CONTAINER_DESTINATION_REF
+  interruptible: true
+  rules:
+    - if: $RUN_ALL_JOBS == 'true'
+    - if: $CI_COMMIT_BRANCH == 'main'
+  artifacts:
+    reports:
+      dotenv: version.env # used to inject the build version as variable for the deployment stage,
+  before_script:
+    - *shared_script_npm_preparation
+    - export ICA_BUILD_VERSION_TAG="$(bash scripts/get-build-version.sh "$ICA_COMMIT_REF_NAME" "$ICA_BUILD_NUMBER")"
+    - export ICA_VERSION_FILE="${ICA_DEPLOYMENT_ARTIFACTS_FOLDER}/--version--${ICA_BUILD_VERSION_TAG}--"
+    - export ICA_SERVICE_ID="$(bash scripts/build/get-service-id.sh)"
+  script:
+    - npm run ci:package:version:set "$ICA_BUILD_VERSION_TAG"
+    - mkdir -p "$(dirname "$ICA_VERSION_FILE")";
+      touch "$ICA_VERSION_FILE"
+    - echo "ICA_DELIVERY_ARTIFACT_NAME=${ICA_BUILD_VERSION_TAG}" >> version.env # used to inject the build version as variable for the deployment stage
+    # service id
+    - echo "ICA_SERVICE_ID_STRING=${ICA_SERVICE_ID}" >> version.env
+
+# ---------------------------------------------------------------------------------------------------
+# License Report stage jobs, has to run BEFORE build
+# ---------------------------------------------------------------------------------------------------
+# TODO: evaluate if an generated file has to be passed to build-stages
+# in this case use artifacts (contact sven.appenrodt@iav.de for details)
+Update License Texts:
+  stage: Build
+  image: $ICA_CONTAINER_DESTINATION_REF
+  interruptible: true
+  rules:
+    - if: $RUN_ALL_JOBS == 'true'
+    - if: $CI_COMMIT_BRANCH == 'main'
+  variables:
+    ICA_LICENSE_REPORT_PATH: 'license-reports'
+  artifacts:
+    name: 'license-reports--version-info'
+    paths:
+      - ${ICA_LICENSE_REPORT_PATH}/
+  before_script:
+    - *shared_script_npm_preparation
+  script:
+    - npm run ci:generate-license-report
+
+
+# ---------------------------------------------------------------------------------------------------
+# Build stage jobs
+# ---------------------------------------------------------------------------------------------------
+Build production JAR:
+  stage: Build
+  image: $ICA_CONTAINER_DESTINATION_REF
+  interruptible: true
+  rules:
+    - if: $RUN_ALL_JOBS == 'true'
+    - if: $CI_COMMIT_BRANCH == 'main'
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  variables:
+    ICA_DELIVERY_ARTIFACT_NAME: value_from_updateversionnumber_job_magically_injected
+    ICA_SERVICE_ID_STRING: idvalue_from_updateversionnumber_job_magically_injected
+    ICA_BUILD_JAR_PATH: 'deployment'
+  artifacts:
+    name: "${ICA_SERVICE_ID_STRING}_${ICA_DELIVERY_ARTIFACT_NAME}"
+    paths:
+      - 'deployment'
+      #- ${ICA_BUILD_JAR_PATH}/
+  before_script:
+    - *shared_script_npm_preparation
+  script:
+    - npm run ci:build:production
+
+
+All artifacts:
+  stage: Deployment
+  image: $ICA_CONTAINER_DESTINATION_REF
+  interruptible: true
+  rules:
+    - if: $RUN_ALL_JOBS == 'true'
+    - if: $CI_COMMIT_BRANCH == 'main'
+  variables:
+    ICA_DELIVERY_ARTIFACT_NAME: value_from_updateversionnumber_job_magically_injected
+  artifacts:
+    expire_in: 14 days
+    name: '$ICA_DELIVERY_ARTIFACT_NAME'
+    paths:
+      - $ICA_DEPLOYMENT_ARTIFACTS_FOLDER
+  before_script:
+    - *shared_script_npm_preparation
+  script:
+    # zip the current source code into one zip file. DO NOT MODIFY code after this step!
+    - mkdir -p "$ICA_DEPLOYMENT_ARTIFACTS_FOLDER"
+    - cp -a "license-reports" "$ICA_DEPLOYMENT_ARTIFACTS_FOLDER"
+    - cp -a "tests" "$ICA_DEPLOYMENT_ARTIFACTS_FOLDER"
+    - mv "deployment/iav.icas3.vw.versioninfo.jar" "$ICA_DEPLOYMENT_ARTIFACTS_FOLDER"
